@@ -1,0 +1,151 @@
+:root {
+    --bg: #10202b;
+    --panel: #17303f;
+    --ivory: #f4efe3;
+    --ink: #1c1a17;
+    --line: #f0b43c;
+    --white-note: #7fd6c2;
+    --black-note: #a99bff;
+    --wrong: #e5484d;
+    --down: #f0b43c;
+    --stage-h: clamp(260px, 46vh, 460px);
+    font-family: system-ui, "Segoe UI", sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ivory);
+}
+
+#app {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 2rem;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+h1,
+h2 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+h1 {
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    margin: 1.5rem 0 .25rem;
+}
+
+.lead {
+    color: #b8c7d0;
+    margin: 0 0 1.5rem;
+}
+
+.screen {
+    animation: none;
+}
+
+.row {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    font: inherit;
+    font-weight: 600;
+    padding: .7rem 1.3rem;
+    border-radius: 8px;
+    border: 2px solid var(--line);
+    background: var(--line);
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.btn.ghost {
+    background: transparent;
+    color: var(--ivory);
+    border-color: #4b6677;
+}
+
+.btn.small {
+    padding: .35rem .8rem;
+}
+
+.btn:hover {
+    filter: brightness(1.1);
+}
+
+.btn:focus-visible,
+.song-card:focus-visible {
+    outline: 3px solid var(--ivory);
+    outline-offset: 2px;
+}
+
+.song-list {
+    display: grid;
+    gap: .75rem;
+    margin-bottom: 1.25rem;
+}
+
+.song-card {
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: var(--panel);
+    border: 2px solid #2c4757;
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    cursor: pointer;
+    display: grid;
+    gap: .2rem;
+}
+
+.song-card:hover {
+    border-color: var(--line);
+}
+
+.song-card b {
+    font-family: Georgia, serif;
+    font-size: 1.25rem;
+}
+
+.song-card span {
+    color: #9fb3bf;
+    font-size: .9rem;
+}
+
+#hud {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: .75rem;
+}
+
+#hud strong {
+    font-family: Georgia, serif;
+    font-size: 1.3rem;
+    margin-right: auto;
+}
+
+#hud b {
+    font-variant-numeric: tabular-nums;
+}
+
+#game[data-mode="free"] .song-only {
+    display: none;
+}
+
+#game[data-mode="song"] .free-only {
+    display: none;
+}
