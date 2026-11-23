@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Piano Trainer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main id="app">
+        <section id="menu" class="screen">
+            <h1>Piano Trainer</h1>
+            <p class="lead">Play with your computer keyboard. The song waits for you.</p>
+            <div id="song-list" class="song-list"></div>
+            <button id="free-btn" class="btn ghost">Free play</button>
+        </section>
+
+        <section id="game" class="screen" hidden>
+            <div id="hud">
+                <strong id="title"></strong>
+                <span class="song-only">Progress <b id="progress">0 / 0</b></span>
+                <span class="song-only">Misses <b id="misses">0</b></span>
+                <button id="quit-btn" class="btn ghost small">Menu</button>
+            </div>
+            <div id="piano">
+                <div id="stage" class="song-only">
+                    <div id="lane"></div>
+                    <div id="hit-line"></div>
+                    <p id="wait-msg">Press the highlighted key</p>
+                </div>
+                <p id="free-msg" class="free-only">Free play: press any key below.</p>
+                <div id="keyboard"></div>
+            </div>
+        </section>
+
+        <section id="results" class="screen" hidden>
+            <h2 id="results-title"></h2>
+            <p id="results-text" class="lead"></p>
+            <div class="row">
+                <button id="again-btn" class="btn">Play again</button>
+                <button id="back-btn" class="btn ghost">Back to menu</button>
+            </div>
+        </section>
+    </main>
+    <script src="songs.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
