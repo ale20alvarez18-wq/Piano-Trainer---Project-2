@@ -97,3 +97,144 @@ function withStartBeats(notes) {
         return timed;
     });
 }
+
+// ---------- Screens ----------
+function showScreen(name) {
+    ["menu", "game", "results"].forEach((id) => { $(id).hidden = id !== name; });
+}
+
+function goMenu() {
+    stopLoop();
+    releaseAll();
+    state.mode = "menu";
+    showScreen("menu");
+}
+
+function buildMenu() {
+    $("song-list").replaceChildren(...SONGS.map((song) => {
+        const card = make("button", "song-card");
+        card.append(
+            make("b", "", song.title),
+            make("span", "", `${song.composer} · ${song.notes.length} notes · ${song.bpm} bpm`),
+        );
+        card.addEventListener("click", () => startSong(song));
+        return card;
+    }));
+}
+
+// ---------- Keyboard UI ----------
+function buildKeyboard() {
+    let mouseKey = null;
+    $("keyboard").replaceChildren(...PIANO.map((key) => {
+        const el = make("div", `key ${key.black ? "black" : "white"}`, key.label);
+        placeInColumn(el, key);
+        el.addEventListener("pointerdown", (e) => { e.preventDefault(); mouseKey = key.pitch; pressKey(key.pitch); });
+        const release = () => { if (mouseKey === key.pitch) { mouseKey = null; releaseKey(key.pitch); } };
+        el.addEventListener("pointerup", release);
+        el.addEventListener("pointerleave", release);
+        el.addEventListener("pointercancel", release);
+        keyEls[key.pitch] = el;
+        return el;
+    }));
+}
+
+function flashWrong(pitch) {
+    const el = keyEls[pitch];
+    el.classList.remove("wrong");
+    void el.offsetWidth;                         // restart the animation
+    el.classList.add("wrong");
+}
+
+function markTarget() {                        // highlights the key you must press next
+    document.querySelectorAll(".key.target").forEach((el) => el.classList.remove("target"));
+    const next = state.song?.notes[state.nextIndex];
+    if (state.mode === "song" && next) keyEls[next.pitch].classList.add("target");
+}
+
+// ---------- Input: keyboard and mouse share pressKey() ----------
+function pressKey(pitch) {
+    if ((state.mode !== "song" && state.mode !== "free") || held.has(pitch)) return;
+    held.add(pitch);
+    keyEls[pitch].classList.add("down");
+    playTone(pitch);
+    if (state.mode === "song") judge(pitch);
+}
+
+function releaseKey(pitch) {
+    held.delete(pitch);
+    keyEls[pitch].classList.remove("down");
+}
+
+function releaseAll() { [...held].forEach(releaseKey); }
+
+function judge(pitch) {
+    if (pitch !== state.song.notes[state.nextIndex].pitch) {
+        state.misses++;
+        flashWrong(pitch);
+        updateHud();
+    } else if (state.waiting) {
+        advance();
+    }
+}
+
+function advance() {
+    state.blocks[state.nextIndex].classList.add("hit");
+    state.nextIndex++;
+    setWaiting(false);
+    updateHud();
+    markTarget();
+    if (state.nextIndex === state.song.notes.length) finishSong();
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+    const pitch = KEY_TO_PITCH[event.code];
+    if (!pitch) return;
+    event.preventDefault();
+    pressKey(pitch);
+});
+document.addEventListener("keyup", (event) => {
+    const pitch = KEY_TO_PITCH[event.code];
+    if (pitch) releaseKey(pitch);
+});
+window.addEventListener("blur", releaseAll);   // no stuck keys when the tab loses focus
+
+// ---------- Animation loop ----------
+function setWaiting(value) {
+    if (state.waiting === value) return;
+    state.waiting = value;
+    $("stage").classList.toggle("waiting", value);
+}
+
+function frame(now) {
+    if (state.lastTime !== null) {
+        const seconds = Math.min((now - state.lastTime) / 1000, MAX_FRAME_SECONDS);
+        state.songBeat += seconds * (state.song.bpm / 60);
+        const next = state.song.notes[state.nextIndex];
+        if (next && state.songBeat >= next.start) {   // wait at the line
+            state.songBeat = next.start;
+            setWaiting(true);
+        }
+    }
+    state.lastTime = now;
+    draw();
+    state.rafId = requestAnimationFrame(frame);
+}
+
+function draw() {                                // only transforms: blocks are created once
+    state.song.notes.forEach((note, i) => {
+        const bottom = state.hitY - (note.start - state.songBeat) * PX_PER_BEAT;
+        state.blocks[i].style.transform = `translateY(${bottom - note.beats * PX_PER_BEAT}px)`;
+    });
+}
+
+function stopLoop() {
+    cancelAnimationFrame(state.rafId);             // never two loops at once
+    state.rafId = null;
+}
+
+function measureStage() {
+    state.hitY = $("lane").clientHeight;
+    if (state.mode === "song") draw();
+}
+window.addEventListener("resize", measureStage);
