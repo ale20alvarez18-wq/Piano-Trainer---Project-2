@@ -238,3 +238,74 @@ function measureStage() {
     if (state.mode === "song") draw();
 }
 window.addEventListener("resize", measureStage);
+
+// ---------- Modes ----------
+function updateHud() {
+    $("progress").textContent = `${state.nextIndex} / ${state.song?.notes.length ?? 0}`;
+    $("misses").textContent = state.misses;
+}
+
+function buildBlocks() {
+    state.blocks = state.song.notes.map((note) => {
+        const el = make("div", `block${KEY_BY_PITCH[note.pitch].black ? " black" : ""}`);
+        placeInColumn(el, KEY_BY_PITCH[note.pitch]);
+        el.style.height = `${note.beats * PX_PER_BEAT}px`;
+        return el;
+    });
+    $("lane").replaceChildren(...state.blocks);
+}
+
+function startSong(song) {
+    ensureAudio();
+    stopLoop();
+    releaseAll();
+    Object.assign(state, {
+        mode: "song", song: { ...song, notes: withStartBeats(song.notes) },
+        nextIndex: 0, misses: 0, waiting: false, lastTime: null,
+    });
+    $("game").dataset.mode = "song";
+    $("title").textContent = song.title;
+    $("stage").classList.remove("waiting");
+    showScreen("game");
+    buildBlocks();                                 // blocks must exist before measureStage() draws
+    measureStage();
+    state.songBeat = -state.hitY / PX_PER_BEAT;    // first block starts just above the stage
+    updateHud();
+    markTarget();
+    draw();
+    state.rafId = requestAnimationFrame(frame);
+}
+
+function startFree() {
+    ensureAudio();
+    stopLoop();
+    releaseAll();
+    state.mode = "free";
+    state.song = null;
+    $("game").dataset.mode = "free";
+    $("title").textContent = "Free play";
+    markTarget();
+    showScreen("game");
+}
+
+function finishSong() {
+    stopLoop();
+    releaseAll();
+    state.mode = "results";
+    const total = state.song.notes.length;
+    $("results-title").textContent = state.misses === 0 ? "Perfect run!" : "Song complete";
+    $("results-text").textContent =
+        `${state.song.title}: ${total} notes, ${state.misses} ${state.misses === 1 ? "miss" : "misses"}.`;
+    showScreen("results");
+}
+
+// ---------- Init ----------
+$("free-btn").addEventListener("click", startFree);
+$("quit-btn").addEventListener("click", goMenu);
+$("back-btn").addEventListener("click", goMenu);
+$("again-btn").addEventListener("click", () => {
+    const original = SONGS.find((s) => s.id === state.song.id);
+    startSong(original);
+});
+buildMenu();
+buildKeyboard();
